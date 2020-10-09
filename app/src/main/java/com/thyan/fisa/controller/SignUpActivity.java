@@ -23,6 +23,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
@@ -58,13 +59,19 @@ public class SignUpActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.account_signup);
         mAuth = FirebaseAuth.getInstance();
-        mdata= FirebaseDatabase.getInstance().getReference("Taikhoan");
+        mdata= FirebaseDatabase.getInstance().getReference();
+        DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference("users");
+        String userId = mDatabase.push().getKey();
+        TaiKhoan user = new TaiKhoan("Ravi Tamada", "ravi@androidhive.info");
+        mDatabase.child(userId).setValue(user);
         init();
         eventReturn();
         eventOpenGallery();
         eventOpenCapture();
         eventSignUp();
         eventShowPassword();
+        DatabaseReference databaseArtists;
+
     }
     private void eventOpenCapture() {
         imageButtonCapture.setOnClickListener(new View.OnClickListener() {
@@ -120,8 +127,20 @@ public class SignUpActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-                            Toast.makeText(getApplicationContext(), R.string.success_signup, Toast.LENGTH_SHORT).show();
                             uploadImage();
+                            Toast.makeText(getApplicationContext(), R.string.success_signup, Toast.LENGTH_SHORT).show();
+                            TaiKhoan tk=new TaiKhoan(editTextEmail.getText().toString(),editTextPassword.getText().toString());
+                            mdata.child("Taikhoan").push().setValue(tk, new DatabaseReference.CompletionListener() {
+                                @Override
+                                public void onComplete(@Nullable DatabaseError databaseError, @NonNull DatabaseReference databaseReference) {
+                                    if(databaseError.equals("")){
+
+                                        Toast.makeText(SignUpActivity.this,"save succes",Toast.LENGTH_LONG).show();
+                                    }else{
+                                        Toast.makeText(SignUpActivity.this,"error",Toast.LENGTH_LONG).show();
+                                    }
+                                }
+                            });
                         } else {
                             Toast.makeText(getApplicationContext(), R.string.unsuccess_signup, Toast.LENGTH_SHORT).show();
                         }
@@ -153,7 +172,7 @@ public class SignUpActivity extends AppCompatActivity {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 Uri downloaduri=taskSnapshot.getUploadSessionUri();
-                Toast.makeText(SignUpActivity.this,"Success",Toast.LENGTH_LONG).show();
+
             }
         });
     }
